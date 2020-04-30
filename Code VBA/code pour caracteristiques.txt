@@ -1,0 +1,111 @@
+''A copier dans workbook
+Private Sub Workbook_Open()
+    Ouverture
+End Sub
+
+
+
+
+''A copier dans un module
+Function combien(plage As Range) As Long
+    
+    Dim nb As Long
+    
+    nb = WorksheetFunction.CountA(plage)
+    combien = nb
+
+End Function
+
+Function LettreColonne(NumCol As Long) As String
+    Dim reste, quotient As Long
+    quotient = Int(NumCol / 26)
+    reste = NumCol Mod 26
+    If quotient = 0 And reste = 0 Then
+        Exit Function
+    End If
+    If quotient = 0 Then
+        LettreColonne = Chr(64 + reste)
+    Else
+        If reste = 0 Then
+            quotient = quotient - 1
+            If quotient = 0 Then
+                LettreColonne = Chr(64 + 26)
+            Else
+                LettreColonne = Chr(64 + quotient) & Chr(64 + 26)
+            End If
+        Else
+            LettreColonne = Chr(64 + quotient) & Chr(64 + reste)
+        End If
+    End If
+End Function
+
+Sub Ouverture()
+    
+    Dim xWs As Worksheet
+    Dim xcsvFile As String
+    Dim c As Range
+    Dim r As Range
+    Dim jour As String
+    Dim mois As String
+    Dim datec As String
+    Dim nb As Long
+    Dim ws As Worksheet
+    
+
+    Set ws = Sheets(1)
+    nb = combien(ws.Range("A:A"))
+    
+    If Range("H1") = "date" Then
+        
+    Else
+        Set c = ws.Rows(1)
+        
+        
+        Range("Q1").Value = "date"
+        
+        For Each r In ws.Range("Q2:Q" & nb)
+        
+            If ws.Range("D" & r.Row) < 10 Then
+                mois = "0" & Range("D" & r.Row).Value
+            Else
+                mois = Range("D" & r.Row).Value
+            End If
+            
+            If ws.Range("C" & r.Row) < 10 Then
+                jour = "0" & Range("C" & r.Row).Value
+            Else
+                jour = Range("C" & r.Row).Value
+            End If
+            
+            r.Value = jour & "/" & mois & "/20" & Range("B" & r.Row).Value
+        Next
+        
+        nb = combien(c)
+        nomcol = LettreColonne(nb)
+        
+        Do
+            For Each r In ws.Range("A1:" & nomcol & "1")
+                If r.Value = "jour" Or r.Value = "mois" Or r.Value = "an" Or r.Value = "hrmn" Or r.Value = "com" Or r.Value = "adr" Or r.Value = "gps" Or r.Value = "lat" Or r.Value = "long" Then
+                    r.EntireColumn.Delete
+                    nb = combien(c)
+                End If
+            Next
+        Loop Until (nb = 8)
+    End If
+    
+    For Each r In Range("G:G")
+        If r.Value < 950 Then
+            r.Value = r.Value / 10
+        End If
+    Next
+    
+    For Each xWs In Application.ActiveWorkbook.Worksheets
+        xWs.Copy
+        xcsvFile = CurDir & "\" & xWs.Name & ".csv"
+        Application.ActiveWorkbook.SaveAs Filename:=xcsvFile, _
+        FileFormat:=xlCSV, CreateBackup:=False
+        Application.ActiveWorkbook.Saved = True
+        Application.ActiveWorkbook.Close
+    Next
+    
+End Sub
